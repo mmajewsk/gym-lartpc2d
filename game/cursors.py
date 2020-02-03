@@ -1,4 +1,4 @@
-from rl_environments.regions import BaseRegion, Region2D, Region3D
+from rl_environments.game.regions import Region2D, Region3D
 import numpy as np
 
 class Cursor:
