@@ -100,12 +100,12 @@ if __name__ == "__main__":
     Runs a simple bot showcasing the game.
     
     e.g. usage 
-        bot.py ../../assets/dump
-        bot.py ../../assets/dump --viz-off
+        bot.py ../../assets/dump\n
+        bot.py ../../assets/dump --viz-off\n
     """
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('data_path', help='Path to the data generated from lartpc')
-    parser.add_argument('--viz-off', default=True, action='store_false', help='Run without visualisation (helpful for debug)')
+    parser.add_argument('--viz-off', default=True, action='store_false', help='Run without visualisation/opencv (helpful for debug)')
     args = parser.parse_args()
     bot_replay(args.data_path, viz=args.viz_off)
 

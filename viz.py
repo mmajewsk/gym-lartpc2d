@@ -41,9 +41,9 @@ class Visualisation:
     @property
     def window_positions(self):
         win_poses = [
-            ('source', (25, 350)),
-            ('target', (450, 350)),
-            ('result', (900,350)),
+            ('source', (25, 260)),
+            ('target', (450, 260)),
+            ('result', (900, 260)),
             ('source_cursor', (25, 100)),
             ('target_cursor', (450, 100)),
             ('result_cursor', (900, 100))
