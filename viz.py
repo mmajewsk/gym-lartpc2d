@@ -1,9 +1,9 @@
 import cv2
 from collections import OrderedDict
-from rl_environments.actors.observations import GameObservation2D
-from rl_environments.actors.actions import GameAction2D
+from actors.observations import GameObservation2D
+from actors.actions import GameAction2D
 import numpy as np
-from rl_environments import game
+from game import game
 import matplotlib.pyplot as plt
 
 class VisMap:

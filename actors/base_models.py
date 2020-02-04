@@ -2,9 +2,9 @@ import random
 
 import numpy as np
 
-from rl_environments.actors.actions import Action2DFactory
-from rl_environments.actors.observations import Observation2DFactory, GameObservation2D
-from rl_environments.actors.states import VisibleState2DFactory
+from actors.actions import Action2DFactory
+from actors.observations import Observation2DFactory, GameObservation2D
+from actors.states import VisibleState2DFactory
 
 
 class BaseActor:

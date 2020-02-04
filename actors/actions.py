@@ -1,6 +1,6 @@
 import numpy as np
 
-from rl_environments.game.cursors import Cursor2D
+from game.cursors import Cursor2D
 
 
 class GameAction2D:
