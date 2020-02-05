@@ -83,6 +83,10 @@ first do ctrl-c in your terminal, than press space on the visualisation
 
 The best documentation is to follow the `bot.py` example, 
 to figure out how it works, 
-or my solution with reinforcement learning.
+or to follow my solution with reinforcement learning.
 
 # Resources
+
+[Deep learn physics website](http://deeplearnphysics.org/)
+
+[My use case with Reinforcement Learning](https://github.com/mmajewsk/lartpc2D)
