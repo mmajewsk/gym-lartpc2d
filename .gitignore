@@ -2,3 +2,5 @@
 *.png
 *.pkl
 .idea/*
+downloading_data/dump/*
+downloading_data/data_lartpc2d/*

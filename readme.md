@@ -37,6 +37,10 @@ pip install -r requirements.txt
 ## Pre-running steps
 ### Getting the data
 
+** This library needs to read data processed from lartpc, which you have to download and process by yourself **
+Follow [readme in downloading_data](downloading_data/readme.md) to do all of the steps.
+
+
 ### Setting up path
 Assuming that you are in `lartpc_game` folder do:
 
