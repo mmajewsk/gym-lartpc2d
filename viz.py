@@ -1,7 +1,7 @@
 import cv2
 from collections import OrderedDict
-from actors.observations import GameObservation2D
-from actors.actions import GameAction2D
+from agents.observations import GameObservation2D
+from agents.actions import GameAction2D
 import numpy as np
 from game import game
 import matplotlib.pyplot as plt

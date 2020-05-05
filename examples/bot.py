@@ -1,19 +1,19 @@
 import data
-from actors.base_models import BaseActor
+from agents.base_agents import BaseAgent
 from game.game import Environment2D,Game2D
-from actors.actions import Action2DFactory, ModelAction2D
-from actors.observations import Observation2DFactory, GameObservation2D
+from agents.actions import Action2DFactory, QAction2D
+from agents.observations import Observation2DFactory, GameObservation2D
 from game.dims import neighborhood2d
 import numpy as np
 import argparse
 
-class BotActor(BaseActor):
+class BotAgent(BaseAgent):
     def __init__(
             self,
             action_factory: Action2DFactory,
             observation_factory: Observation2DFactory
         ):
-        BaseActor.__init__(self, action_factory, observation_factory)
+        BaseAgent.__init__(self, action_factory, observation_factory)
         input_size = self.observation_factory.cursor.region_source_input.window_size
         assert input_size==5
         large_neighborhood = neighborhood2d(input_size)
@@ -34,7 +34,7 @@ class BotActor(BaseActor):
         self.lu_large_nbhood_mask = empty2.astype(np.bool)
 
 
-    def create_action(self, state: GameObservation2D) -> ModelAction2D:
+    def create_action(self, state: GameObservation2D) -> QAction2D:
         """
          Ok so:
          1. check nearest neighbours, if have value, and untoched, move at random. If not possible:
@@ -75,7 +75,7 @@ def bot_replay(data_path, viz=True):
         vis = Visualisation(game)
     action_factory = Action2DFactory(game.cursor.copy(), categories=result_dimensions)
     observation_factory = Observation2DFactory(game.cursor.copy(), categories=result_dimensions)
-    actor = BotActor(
+    agent = BotAgent(
         action_factory,
         observation_factory,
     )
@@ -86,8 +86,8 @@ def bot_replay(data_path, viz=True):
             game.start()
             for model_run_iteration in range(game.max_step_number):
                 current_observation = game.get_observation()
-                model_action = actor.create_action(current_observation)
-                game_action = actor.action_factory.model_action_to_game(model_action)
+                model_action = agent.create_action(current_observation)
+                game_action = model_action.to_game_aciton(agent.action_factory)
                 state = game.step(game_action)
                 if viz: vis.update(0)
                 if state.done:
