@@ -67,7 +67,7 @@ class QAction2D(AgentAction2D):
         ])
 
         """
-        AgentAction2D.__init__(put_decision)
+        AgentAction2D.__init__(self, put_decision)
         self.movement_decision= movement_decision
         self.factory = factory
 
