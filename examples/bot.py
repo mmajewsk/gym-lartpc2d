@@ -1,8 +1,8 @@
 import data
-from agents.base_agents import BaseAgent
+from environment.environment import BaseAgent
 from game.game import Environment2D,Game2D
-from agents.actions import Action2DFactory, QAction2D
-from agents.observations import Observation2DFactory, GameObservation2D
+from environment.actions import Action2DFactory, QAction2D
+from environment.observations import Observation2DFactory, GameObservation2D
 from game.dims import neighborhood2d
 import numpy as np
 import argparse

@@ -1,5 +1,5 @@
 import numpy as np
-from agents.observations import GameObservation2D, ModelObservation2D, Observation2DFactory
+from environment.observations import GameObservation2D, ModelObservation2D, Observation2DFactory
 from tensorflow.keras.utils import to_categorical
 
 class State2D:

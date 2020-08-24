@@ -2,9 +2,9 @@ import random
 
 import numpy as np
 
-from agents.actions import Action2DFactory
-from agents.observations import Observation2DFactory, GameObservation2D
-from agents.states import VisibleState2DFactory
+from environment.actions import Action2DFactory
+from environment.observations import Observation2DFactory, GameObservation2D
+from environment.states import VisibleState2DFactory
 
 
 class BaseAgent:
