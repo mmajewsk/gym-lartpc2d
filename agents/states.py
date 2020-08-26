@@ -1,6 +1,6 @@
 import numpy as np
 from agents.observations import GameObservation2D, ModelObservation2D, Observation2DFactory
-from tensorflow.keras.utils import to_categorical
+from tools import to_categorical_
 
 class State2D:
     def to_dict(self):
@@ -46,7 +46,7 @@ class VisibleState2DFactory:
 
     def game_to_model_visible_state(self, state: GameVisibleState2D) -> ModelVisibleState2D:
         assert isinstance(state, GameVisibleState2D)
-        target_categorical = to_categorical(state.target, num_classes=self.categories)[np.newaxis, :]
+        target_categorical = to_categorical_(state.target, num_classes=self.categories)[np.newaxis, :]
         state = ModelVisibleState2D(
             obs= self.obsf.game_to_model_observation(state.obs),
             target=target_categorical,
