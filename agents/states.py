@@ -1,6 +1,6 @@
 import numpy as np
 from agents.observations import GameObservation2D, ModelObservation2D, Observation2DFactory
-from tools import to_categorical_
+from agents.tools import to_categorical_
 
 class State2D:
     def to_dict(self):

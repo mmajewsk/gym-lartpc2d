@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from abc import abstractmethod, ABC
 
-class BaseEnvironment(ABC):
+class BaseDetector(ABC):
     def __init__(self, result_dimensions = None):
         self.source_map = None
         self.target_map = None
@@ -51,17 +51,17 @@ class BaseEnvironment(ABC):
         return self.source_map, self.target_map, self.result_map
 
 
-class Environment2D(BaseEnvironment):
+class Detector2D(BaseDetector):
 
     @property
     def dimension_list(self):
         return ['x','y']
 
 
-class Game2D:
+class Lartpc2D:
 
-    def __init__(self, env: Environment2D, max_step_number):
-        self.env = env
+    def __init__(self, result_dimension, max_step_number):
+        self.env = Detector2D(result_dimension)
         self.cursor = Cursor2D(output_size=1, input_result_size = 5, input_source_size=5, movement_size=3)
         self.cursor_history = []
         self.reward_history = []
@@ -156,7 +156,7 @@ class Game2D:
             source_cursor=self.cursor.get_range(self.env.source_map),
             result_cursor=self.cursor.get_range(self.env.result_map, region_type='result_input'),
         )
-        reward = Game2D._reward_calc(self, **rewards_dict)
+        reward = Lartpc2D._reward_calc(self, **rewards_dict)
         return reward
 
 

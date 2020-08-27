@@ -28,7 +28,7 @@ class VisMap:
 
 
 class Visualisation:
-    def __init__(self, game: game.Game2D):
+    def __init__(self, game: game.Lartpc2D):
         self.game = game
 
     @property

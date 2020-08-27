@@ -1,6 +1,6 @@
 import data
 from agents.base_agents import BaseAgent
-from game.game import Environment2D,Game2D
+from game.game import Detector2D,Lartpc2D
 from agents.actions import Action2DFactory, QAction2D
 from agents.observations import Observation2DFactory, GameObservation2D
 from game.dims import neighborhood2d
@@ -58,7 +58,7 @@ class BotAgent(BaseAgent):
         choice = np.random.choice(go_indeces,1)[0]
         result = np.zeros((1,8))
         result[0,choice] = 1.0
-        action = self.action_factory.create_random_action()
+        action = QAction2D.create_random_action(self.action_factory)
         action.movement_decision = result
         return action
 
@@ -66,9 +66,7 @@ def bot_replay(data_path, viz=True):
     max_step_number = 20
     data_generator = data.LartpcData.from_path(data_path)
     result_dimensions = 3
-    env = Environment2D(result_dimensions=result_dimensions)
-    env.set_map(*data_generator[3])
-    game = Game2D(env, max_step_number=max_step_number)
+    game = Lartpc2D(result_dimensions, max_step_number=max_step_number)
     if viz:
         # i know this is not nice, but sometimes opencv can be stack at debug
         from viz import Visualisation
