@@ -2,23 +2,24 @@ import random
 
 import numpy as np
 
-from agents.actions import Action2DFactory
-from agents.observations import Observation2DFactory, GameObservation2D
+from game.game import Lartpc2D
+from agents.actions import Action2DSettings
+from agents.observations import Observation2DSettings, EnvObservation2D
 from agents.states import VisibleState2DFactory
 
 
 class BaseAgent:
     def __init__(
             self,
-            action_factory: Action2DFactory,
-            observation_factory: Observation2DFactory,
+            env: Lartpc2D
          ):
-        self.action_factory = action_factory
-        self.observation_factory = observation_factory
-        self.state_factory = VisibleState2DFactory(observation_factory)
+        self.env = env
+        self.action_settings =  self.env.action_settings
+        self.observation_settings = self.env.observation_settings
+        self.state_factory = VisibleState2DFactory(self.observation_settings)
 
 
-    def create_action(self, state: GameObservation2D):
+    def create_action(self, state: EnvObservation2D):
         pass
 
 
@@ -148,5 +149,5 @@ class SquashedTraceBuffer(ExperienceBuffer):
     def sample(self,batch_size: int, trace_length: int) -> np.ndarray:
         samples = ExperienceBuffer.sample(self, batch_size, trace_length)
         # just because in our usecase trace length is 1 he samples are for (batch_size, trace_length, 3)
-        # where 3  stands for [GameVisibleState2D, GameAction2D, GameVisibleState2D]
+        # where 3  stands for [GameVisibleState2D, EnvAction2D, GameVisibleState2D]
         return samples.reshape([samples.shape[0]*samples.shape[1], samples.shape[2]])

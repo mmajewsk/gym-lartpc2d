@@ -3,7 +3,7 @@ import numpy as np
 from game.cursors import Cursor2D
 
 
-class GameAction2D:
+class EnvAction2D:
     def __init__(self, movement_vector, movement_number, put_data):
         """
         This is accurate action that is supposed to be taken
@@ -29,7 +29,7 @@ class AgentAction2D:
     def _get_simple_index(self, factory) -> int:
         pass
 
-    def to_game_aciton(self, factory) -> GameAction2D:
+    def to_game_aciton(self, factory) -> EnvAction2D:
         # this is loss convertion
         # for window_size =3
         # middle index = floor(3/2)*(3+1)
@@ -41,7 +41,7 @@ class AgentAction2D:
         else:
             a = simple_index + 0
         unflat_data = self.put_decision.reshape(factory.put_shape)
-        return GameAction2D(factory.possible_movement[simple_index], simple_index, unflat_data)
+        return EnvAction2D(factory.possible_movement[simple_index], simple_index, unflat_data)
 
 class QAction2D(AgentAction2D):
 
@@ -86,7 +86,7 @@ class QAction2D(AgentAction2D):
         self.movement_decision = dummy_model.movement_decision
         return dummy_model
 
-    def from_game(self, g_a: GameAction2D, factory):
+    def from_game(self, g_a: EnvAction2D, factory):
         # this is loss convertion
         flat_movement = np.zeros(factory.movement_size, factory.possible_movement.dtype)
         a, = np.where(factory.possible_movement==g_a.movement_vector)
@@ -120,7 +120,7 @@ class PolicyAction(AgentAction2D):
         return np.random.choice(factory.movement_size, 1, p=self.policy)[0]
 
     @staticmethod
-    def from_game(g_a: GameAction2D, factory):
+    def from_game(g_a: EnvAction2D, factory):
         # this is loss convertion
         flat_movement = np.zeros(factory.movement_size, factory.possible_movement.dtype)
         a = np.where((factory.possible_movement==g_a.movement_vector).all(axis=1))
@@ -128,10 +128,10 @@ class PolicyAction(AgentAction2D):
         return PolicyAction(flat_movement.flatten(), g_a.put_data)
 
 
-    def to_game_aciton(self, factory) -> GameAction2D:
+    def to_game_aciton(self, factory) -> EnvAction2D:
         return AgentAction2D.to_game_aciton(self, factory)
 
-class Action2DFactory:
+class Action2DSettings:
     def __init__(self, cursor: Cursor2D, categories=0):
         self.cursor = cursor
         mov_range = cursor.region_movement.neighbourhood

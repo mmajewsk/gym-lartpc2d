@@ -1,20 +1,20 @@
 import data
 from agents.base_agents import BaseAgent
 from game.game import Detector2D,Lartpc2D
-from agents.actions import Action2DFactory, QAction2D
-from agents.observations import Observation2DFactory, GameObservation2D
+from agents.actions import Action2DSettings, QAction2D
+from agents.observations import Observation2DSettings, EnvObservation2D
 from game.dims import neighborhood2d
 import numpy as np
 import argparse
 
+
 class BotAgent(BaseAgent):
     def __init__(
             self,
-            action_factory: Action2DFactory,
-            observation_factory: Observation2DFactory
+            env: Lartpc2D,
         ):
-        BaseAgent.__init__(self, action_factory, observation_factory)
-        input_size = self.observation_factory.cursor.region_source_input.window_size
+        BaseAgent.__init__(self, env)
+        input_size = self.observation_settings.cursor.region_source_input.window_size
         assert input_size==5
         large_neighborhood = neighborhood2d(input_size)
         small_neighborhood = neighborhood2d(input_size-2)
@@ -34,7 +34,7 @@ class BotAgent(BaseAgent):
         self.lu_large_nbhood_mask = empty2.astype(np.bool)
 
 
-    def create_action(self, state: GameObservation2D) -> QAction2D:
+    def create_action(self, state: EnvObservation2D) -> QAction2D:
         """
          Ok so:
          1. check nearest neighbours, if have value, and untoched, move at random. If not possible:
@@ -58,7 +58,7 @@ class BotAgent(BaseAgent):
         choice = np.random.choice(go_indeces,1)[0]
         result = np.zeros((1,8))
         result[0,choice] = 1.0
-        action = QAction2D.create_random_action(self.action_factory)
+        action = QAction2D.create_random_action(self.action_settings)
         action.movement_decision = result
         return action
 
@@ -71,21 +71,21 @@ def bot_replay(data_path, viz=True):
         # i know this is not nice, but sometimes opencv can be stack at debug
         from viz import Visualisation
         vis = Visualisation(game)
-    action_factory = Action2DFactory(game.cursor.copy(), categories=result_dimensions)
-    observation_factory = Observation2DFactory(game.cursor.copy(), categories=result_dimensions)
+    action_settings = Action2DSettings(game.cursor.copy(), categories=result_dimensions)
+    observation_settings = Observation2DSettings(game.cursor.copy(), categories=result_dimensions)
     agent = BotAgent(
-        action_factory,
-        observation_factory,
+        action_settings,
+        observation_settings,
     )
     for iterate_maps in range(30):
         map_number = np.random.randint(0, len(data_generator))
-        game.env.set_map(*data_generator[map_number])
+        game.maps.set_maps(*data_generator[map_number])
         for iterate_tries in range(10):
             game.start()
             for model_run_iteration in range(game.max_step_number):
                 current_observation = game.get_observation()
                 model_action = agent.create_action(current_observation)
-                game_action = model_action.to_game_aciton(agent.action_factory)
+                game_action = model_action.to_game_aciton(agent.action_settings)
                 state = game.step(game_action)
                 if viz: vis.update(0)
                 if state.done:

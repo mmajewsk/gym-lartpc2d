@@ -1,7 +1,7 @@
 import cv2
 from collections import OrderedDict
-from agents.observations import GameObservation2D
-from agents.actions import GameAction2D
+from agents.observations import EnvObservation2D
+from agents.actions import EnvAction2D
 import numpy as np
 from game import game
 import matplotlib.pyplot as plt
@@ -58,9 +58,9 @@ class Visualisation:
         self._heat_result_map = val[2]
 
     def _update_maps(self):
-        self._source_img = self.game.env.source_map.copy()
-        self._target_img = self.game.env.target_map.copy()
-        _result_img = self.game.env.result_map.copy()
+        self._source_img = self.game.maps.source_map.copy()
+        self._target_img = self.game.maps.target_map.copy()
+        _result_img = self.game.maps.result_map.copy()
         self._result_img = np.argmax(_result_img, axis=2)
         self._vis_source_map = VisMap(self._source_img)
         self._vis_target_map = VisMap(self._target_img)
@@ -111,7 +111,7 @@ class MixedModelVisualisation(Visualisation):
         poses['network_output'] = (1200, 250)
         return poses
 
-    def obs_action(self, obs: GameObservation2D, action: GameAction2D):
+    def obs_action(self, obs: EnvObservation2D, action: EnvAction2D):
         self.observation = obs
         self.action = action
 

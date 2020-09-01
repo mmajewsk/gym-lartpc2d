@@ -5,7 +5,7 @@ class Obsercation2D:
     def to_dict(self):
         return self.__dict__
 
-class GameObservation2D:
+class EnvObservation2D:
     def __init__(self, source_oservation, result_observation):
         """
 
@@ -35,7 +35,7 @@ class ModelObservation2D:
     def as_tuple(self):
         return self.source_data, self.result_data
 
-class Observation2DFactory:
+class Observation2DSettings:
     def __init__(self, cursor: Cursor2D, categories=0):
         self.cursor = cursor
         self.categories = categories
@@ -43,16 +43,16 @@ class Observation2DFactory:
         if categories != 0:
             self.result_shape = self.cursor.region_result_input.shape + (self.categories, )
 
-    def game_to_model_observation(self, obs: GameObservation2D) -> ModelObservation2D:
+    def game_to_model_observation(self, obs: EnvObservation2D) -> ModelObservation2D:
         ob_src = obs.source_observation.flatten()
         ob_res = obs.result_observation.flatten()
         ob_src, ob_res = ob_src[np.newaxis,:], ob_res[np.newaxis,:]
         return ModelObservation2D(ob_src, ob_res)
 
-    def model_to_game_observation(self, obs: ModelObservation2D) -> GameObservation2D:
+    def model_to_game_observation(self, obs: ModelObservation2D) -> EnvObservation2D:
         ob_src = obs.source_data.reshape(self.cursor.region_source_input.shape)
         ob_res = obs.result_data.reshape(self.cursor.region_result_input.shape)
-        return GameObservation2D(ob_src, ob_res)
+        return EnvObservation2D(ob_src, ob_res)
 
     def to_network_input(self, obs: ModelObservation2D) -> np.ndarray:
         return [obs.source_data[np.newaxis,:], obs.result_data[np.newaxis,:]]

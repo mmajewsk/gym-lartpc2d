@@ -1,5 +1,5 @@
 import numpy as np
-from agents.observations import GameObservation2D, ModelObservation2D, Observation2DFactory
+from agents.observations import EnvObservation2D, ModelObservation2D, Observation2DSettings
 from agents.tools import to_categorical_
 
 class State2D:
@@ -14,7 +14,7 @@ class GameVisibleState2D(State2D):
     This is a class that encapsulates the state of the game visible
     currently for the actor, produced by Game.
     """
-    def __init__(self, obs: GameObservation2D, target, reward, done, info):
+    def __init__(self, obs: EnvObservation2D, target, reward, done, info):
         self.obs = obs
         self.target = target
         self.reward = reward
@@ -38,7 +38,7 @@ class ModelVisibleState2D(State2D):
 
 class VisibleState2DFactory:
 
-    def __init__(self, obsf:Observation2DFactory):
+    def __init__(self, obsf:Observation2DSettings):
         self.obsf = obsf
         self.cursor = obsf.cursor.copy()
         self.categories = obsf.categories
