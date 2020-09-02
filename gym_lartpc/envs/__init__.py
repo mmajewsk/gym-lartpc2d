@@ -1,1 +1,1 @@
-from gym_lartpc.envs.lartpc import Lartpc
+from gym_lartpc.envs.lartpc import LartpcEnv

@@ -7,9 +7,9 @@ from agents.observables import Action2Dai, State2Dai, Observation2Dai
 class LartpcEnv(gym.Env, Lartpc2D):
   metadata = {'render.modes': ['human']}
 
-  def __init__(self):
-      gym.Enb.__init__(self)
-      Lartpc2D.__init__(result_dimension, max_step_number)
+  def __init__(self, result_dimension=3, max_step_number=8):
+      gym.Env.__init__(self)
+      Lartpc2D.__init__(self, result_dimension, max_step_number)
 
   def step(self, action: Action2Dai) -> State2Dai:
       return Lartpc2D.step(self, action)
