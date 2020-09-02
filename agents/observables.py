@@ -14,11 +14,16 @@ class StaticTyped:
                 assert instance_check, message(k, attr_val.shape, attr_val.dtype, v)
             assert instance_check, message(k, type(getattr(self,k)), v)
 
+class StaticTypedForced(StaticTyped):
+
+    def __post_init__(self):
+        self.type_check()
+
 @dataclass
 class Observation2Dai(StaticTyped):
     source: NDArray[(typing.Any, typing.Any), np.float32]
-    result: NDArray[(typing.Any, typing.Any, 3), np.int32]
-    target: NDArray[(typing.Any, typing.Any, 3), np.int32]
+    result: NDArray[(typing.Any, typing.Any, 3), np.float32]
+    target: NDArray[(typing.Any, typing.Any), np.int32]
 
 @dataclass
 class State2Dai(StaticTyped):

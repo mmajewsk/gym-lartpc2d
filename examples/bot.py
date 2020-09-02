@@ -1,11 +1,11 @@
 import data
 from agents.base_agents import BaseAgent
-from game.game import Detector2D,Lartpc2D
-from agents.actions import Action2DSettings, QAction2D
-from agents.observations import Observation2DSettings, EnvObservation2D
+from game.game_ai import Detector2D,Lartpc2D
+from agents.observables import Observation2Dai, State2Dai, Action2Dai
 from game.dims import neighborhood2d
 import numpy as np
 import argparse
+from agents.tools import PolicyToAction
 
 
 class BotAgent(BaseAgent):
@@ -34,7 +34,7 @@ class BotAgent(BaseAgent):
         self.lu_large_nbhood_mask = empty2.astype(np.bool)
 
 
-    def create_action(self, state: EnvObservation2D) -> QAction2D:
+    def create_action(self, state: State2Dai) -> Action2Dai:
         """
          Ok so:
          1. check nearest neighbours, if have value, and untoched, move at random. If not possible:
@@ -43,8 +43,8 @@ class BotAgent(BaseAgent):
         :return:
         """
 
-        smbhd_source = state.source_observation[self.lu_small_nbhood_mask]
-        smbhd_result = state.result_observation[self.lu_small_nbhood_mask]
+        smbhd_source = state.source[self.lu_small_nbhood_mask]
+        smbhd_result = state.result[self.lu_small_nbhood_mask]
         assert smbhd_result.shape[-1] == 3
         smbhd_result = np.argmax(smbhd_result, axis=1)
         go = (smbhd_result == 0) & (smbhd_source != 0)
@@ -58,8 +58,10 @@ class BotAgent(BaseAgent):
         choice = np.random.choice(go_indeces,1)[0]
         result = np.zeros((1,8))
         result[0,choice] = 1.0
-        action = QAction2D.create_random_action(self.action_settings)
-        action.movement_decision = result
+        movement_random = np.random.random(self.action_settings.movement_size).astype(np.float32)
+        put_random = np.random.random(self.action_settings.put_shape).astype(np.float32)
+        action = PolicyToAction()((movement_random, put_random), self.action_settings)
+        action.type_check()
         return action
 
 def bot_replay(data_path, viz=True):
@@ -71,11 +73,8 @@ def bot_replay(data_path, viz=True):
         # i know this is not nice, but sometimes opencv can be stack at debug
         from viz import Visualisation
         vis = Visualisation(game)
-    action_settings = Action2DSettings(game.cursor.copy(), categories=result_dimensions)
-    observation_settings = Observation2DSettings(game.cursor.copy(), categories=result_dimensions)
     agent = BotAgent(
-        action_settings,
-        observation_settings,
+        game
     )
     for iterate_maps in range(30):
         map_number = np.random.randint(0, len(data_generator))
@@ -84,9 +83,8 @@ def bot_replay(data_path, viz=True):
             game.start()
             for model_run_iteration in range(game.max_step_number):
                 current_observation = game.get_observation()
-                model_action = agent.create_action(current_observation)
-                game_action = model_action.to_game_aciton(agent.action_settings)
-                state = game.step(game_action)
+                action = agent.create_action(current_observation)
+                state = game.step(action)
                 if viz: vis.update(0)
                 if state.done:
                     break

@@ -1,13 +1,64 @@
-from agents.actions import Action2DSettings
-from agents.observations import Observation2DSettings
-from agents.act_obs_state_ai import Action2Dai, State2Dai, Observation2Dai, State2Dai
+from agents.settings import Action2DSettings, Observation2DSettings
+from agents.observables import Action2Dai, State2Dai, Observation2Dai, State2Dai
 from game.cursors import Cursor2D
 import numpy as np
 import pandas as pd
-from game.game import Lartpc2D, Detector2D
+
+from abc import abstractmethod, ABC
+
+class DetectorMaps(ABC):
+    def __init__(self, result_dimensions = None):
+        self.source_map = None
+        self.target_map = None
+        self.result_map = None
+        self.result_dimensions = result_dimensions
+
+    @property
+    @abstractmethod
+    def dimension_list(self):
+        #eg. return ['x','y','z']
+        pass
+
+    def read_source_nonzero_indeces(self):
+        self.nonzero_indeces = np.where(self.source_map > 0.)
+
+    def create_nonzero_df(self, nonzero_indeces):
+        df_dict = {}
+        for dim, nonzero_ax in zip(self.dimension_list, nonzero_indeces):
+            df_dict[dim] = nonzero_ax
+        self.nonzero_df = pd.DataFrame(df_dict)
+        self.nonzero_df['touched'] = 0
+
+    def get_random_positions(self):
+        row = self.nonzero_df.sample(1)
+        return row[self.dimension_list].values
+
+    def set_maps(self, source, target, result=None):
+        self.source_map = source
+        self.target_map = target
+        if result is not None:
+            self.result_map = result
+        else:
+            if self.result_dimensions is not None:
+                self.result_map = np.zeros(self.target_map.shape+(self.result_dimensions,))
+            else:
+                self.result_map = np.zeros_like(self.target_map)
+
+        self.read_source_nonzero_indeces()
+        self.create_nonzero_df(self.nonzero_indeces)
+
+    def get_maps(self):
+        return self.source_map, self.target_map, self.result_map
 
 
-class Lartpc2Dai:
+class Detector2D(DetectorMaps):
+
+    @property
+    def dimension_list(self):
+        return ['x','y']
+
+
+class Lartpc2D:
 
     def __init__(self, result_dimension, max_step_number):
         self.result_dimenstion = result_dimension
@@ -106,5 +157,5 @@ class Lartpc2Dai:
             source_cursor=self.cursor.get_range(self.maps.source_map),
             result_cursor=self.cursor.get_range(self.maps.result_map, region_type='result_input'),
         )
-        reward = Lartpc2Dai._reward_calc(self, **rewards_dict)
+        reward = Lartpc2D._reward_calc(self, **rewards_dict)
         return reward

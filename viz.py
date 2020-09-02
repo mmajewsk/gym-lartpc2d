@@ -1,10 +1,9 @@
 import cv2
 from collections import OrderedDict
-from agents.observations import EnvObservation2D
-from agents.actions import EnvAction2D
 import numpy as np
-from game import game
+from game import game_ai
 import matplotlib.pyplot as plt
+from agents.observables import Action2Dai, State2Dai, Observation2Dai
 
 class VisMap:
     def __init__(self, image, cmap_name='viridis'):
@@ -28,7 +27,7 @@ class VisMap:
 
 
 class Visualisation:
-    def __init__(self, game: game.Lartpc2D):
+    def __init__(self, game: game_ai.Lartpc2D):
         self.game = game
 
     @property
@@ -111,7 +110,7 @@ class MixedModelVisualisation(Visualisation):
         poses['network_output'] = (1200, 250)
         return poses
 
-    def obs_action(self, obs: EnvObservation2D, action: EnvAction2D):
+    def obs_action(self, obs: Observation2Dai, action: Action2Dai):
         self.observation = obs
         self.action = action
 

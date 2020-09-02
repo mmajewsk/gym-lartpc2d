@@ -1,11 +1,8 @@
 import random
-
 import numpy as np
-
-from game.game import Lartpc2D
-from agents.actions import Action2DSettings
-from agents.observations import Observation2DSettings, EnvObservation2D
-from agents.states import VisibleState2DFactory
+from game.game_ai import Lartpc2D
+from agents.settings import Action2DSettings, Observation2DSettings
+from agents.observables import State2Dai
 
 
 class BaseAgent:
@@ -16,10 +13,9 @@ class BaseAgent:
         self.env = env
         self.action_settings =  self.env.action_settings
         self.observation_settings = self.env.observation_settings
-        self.state_factory = VisibleState2DFactory(self.observation_settings)
 
 
-    def create_action(self, state: EnvObservation2D):
+    def create_action(self, state: State2Dai):
         pass
 
 
