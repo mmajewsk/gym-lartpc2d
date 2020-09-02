@@ -62,15 +62,15 @@ class Lartpc2D:
 
     def __init__(self, result_dimension, max_step_number):
         self.result_dimenstion = result_dimension
-        self.maps = Detector2D(result_dimension)
+        self.detector = Detector2D(result_dimension)
         self.cursor = Cursor2D(output_size=1, input_result_size = 5, input_source_size=5, movement_size=3)
         self.cursor_history = []
         self.reward_history = []
         self.max_step_number = max_step_number
         self.step_number = None
         self.done = None
-        self.action_settings = Action2DSettings(self.cursor.copy(), categories=self.maps.result_dimensions)
-        self.observation_settings = Observation2DSettings(self.cursor.copy(), categories=self.maps.result_dimensions)
+        self.action_settings = Action2DSettings(self.cursor.copy(), categories=self.detector.result_dimensions)
+        self.observation_settings = Observation2DSettings(self.cursor.copy(), categories=self.detector.result_dimensions)
 
 
     def move_cursor(self, new_center):
@@ -79,7 +79,7 @@ class Lartpc2D:
 
     def start(self):
         self.cursor_history = []
-        for center in self.maps.get_random_positions():
+        for center in self.detector.get_random_positions():
             if not self._outside_marigin(center):
                 self.cursor.current_center = center
                 break
@@ -88,13 +88,13 @@ class Lartpc2D:
 
     def _outside_marigin(self, new_center):
         marigin = self.cursor.region_source_input.r_low
-        return np.any(new_center <= marigin) or np.any(new_center >= self.maps.source_map.shape[0]-marigin)
+        return np.any(new_center <= marigin) or np.any(new_center >= self.detector.source_map.shape[0]-marigin)
 
 
     def _act(self, action: Action2Dai) -> bool:
         assert action.put_data.shape==self.cursor.region_output.shape+(3,)
         assert action.movement_vector.shape==(1,2)
-        self.cursor.set_range(self.maps.result_map, action.put_data)
+        self.cursor.set_range(self.detector.result_map, action.put_data)
         new_center = self.cursor.current_center + np.squeeze(action.movement_vector)
         if self._outside_marigin(new_center):
             action_success = False
@@ -123,9 +123,9 @@ class Lartpc2D:
         return state
 
     def get_observation(self) -> Observation2Dai:
-        source_curs = self.cursor.get_range(self.maps.source_map, region_type='source_input').astype(np.float32)
-        result_curs = self.cursor.get_range(self.maps.result_map, region_type='result_input').astype(np.float32)
-        target_curs = self.cursor.get_range(self.maps.target_map, region_type='output').astype(np.int32)
+        source_curs = self.cursor.get_range(self.detector.source_map, region_type='source_input').astype(np.float32)
+        result_curs = self.cursor.get_range(self.detector.result_map, region_type='result_input').astype(np.float32)
+        target_curs = self.cursor.get_range(self.detector.target_map, region_type='output').astype(np.int32)
         obs = Observation2Dai(source_curs, result_curs, target_curs)
         return obs
 
@@ -154,8 +154,8 @@ class Lartpc2D:
 
     def reward(self):
         rewards_dict = dict(
-            source_cursor=self.cursor.get_range(self.maps.source_map),
-            result_cursor=self.cursor.get_range(self.maps.result_map, region_type='result_input'),
+            source_cursor=self.cursor.get_range(self.detector.source_map),
+            result_cursor=self.cursor.get_range(self.detector.result_map, region_type='result_input'),
         )
         reward = Lartpc2D._reward_calc(self, **rewards_dict)
         return reward

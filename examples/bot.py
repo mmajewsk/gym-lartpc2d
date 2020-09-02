@@ -78,7 +78,7 @@ def bot_replay(data_path, viz=True):
     )
     for iterate_maps in range(30):
         map_number = np.random.randint(0, len(data_generator))
-        game.maps.set_maps(*data_generator[map_number])
+        game.detector.set_maps(*data_generator[map_number])
         for iterate_tries in range(10):
             game.start()
             for model_run_iteration in range(game.max_step_number):

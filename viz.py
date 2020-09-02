@@ -57,9 +57,9 @@ class Visualisation:
         self._heat_result_map = val[2]
 
     def _update_maps(self):
-        self._source_img = self.game.maps.source_map.copy()
-        self._target_img = self.game.maps.target_map.copy()
-        _result_img = self.game.maps.result_map.copy()
+        self._source_img = self.game.detector.source_map.copy()
+        self._target_img = self.game.detector.target_map.copy()
+        _result_img = self.game.detector.result_map.copy()
         self._result_img = np.argmax(_result_img, axis=2)
         self._vis_source_map = VisMap(self._source_img)
         self._vis_target_map = VisMap(self._target_img)
