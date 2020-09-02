@@ -1,6 +1,6 @@
 from setuptools import setup
 
-with open("README.md", "r") as fh:
+with open("readme.md", "r") as fh:
     long_description = fh.read()
     setup(
         name='gym_lartpc',
@@ -23,7 +23,3 @@ with open("README.md", "r") as fh:
         ]
 
     )
-setup(name='gym_foo',
-      version='0.0.1',
-      install_requires=['gym']  # And any other dependencies foo needs
-)
