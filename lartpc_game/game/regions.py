@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from game.dims import neighborhood2d, neighborhood3d, set_range2d, set_range3d, get_range2d, get_range3d
+from lartpc_game.game.dims import neighborhood2d, neighborhood3d, set_range2d, set_range3d, get_range2d, get_range3d
 from abc import abstractmethod
 
 class BaseRegion:

@@ -1,4 +1,4 @@
-from game.regions import Region2D, Region3D
+from lartpc_game.game.regions import Region2D, Region3D
 import numpy as np
 
 class Cursor:

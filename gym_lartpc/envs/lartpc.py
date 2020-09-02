@@ -1,8 +1,8 @@
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from game.game_ai import Lartpc2D
-from agents.observables import Action2Dai, State2Dai, Observation2Dai
+from lartpc_game.game.game_ai import Lartpc2D
+from lartpc_game.agents.observables import Action2Dai, State2Dai, Observation2Dai
 
 class LartpcEnv(gym.Env, Lartpc2D):
   metadata = {'render.modes': ['human']}

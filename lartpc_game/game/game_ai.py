@@ -1,6 +1,6 @@
-from agents.settings import Action2DSettings, Observation2DSettings
-from agents.observables import Action2Dai, State2Dai, Observation2Dai, State2Dai
-from game.cursors import Cursor2D
+from lartpc_game.agents.settings import Action2DSettings, Observation2DSettings
+from lartpc_game.agents.observables import Action2Dai, State2Dai, Observation2Dai, State2Dai
+from lartpc_game.game.cursors import Cursor2D
 import numpy as np
 import pandas as pd
 

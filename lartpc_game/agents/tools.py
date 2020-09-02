@@ -1,6 +1,6 @@
 import numpy as np
-from agents.settings import Action2DSettings
-from agents.observables import Action2Dai
+from lartpc_game.agents.settings import Action2DSettings
+from lartpc_game.agents.observables import Action2Dai
 
 def to_categorical_(y, num_classes=None, dtype='float32'):
     # taken from https://www.tensorflow.org/api_docs/python/tf/keras/utils/to_categorical

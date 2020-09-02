@@ -1,5 +1,5 @@
 import numpy as np
-from game.cursors import Cursor2D
+from lartpc_game.game.cursors import Cursor2D
 
 class Action2DSettings:
     def __init__(self, cursor: Cursor2D, categories=0):

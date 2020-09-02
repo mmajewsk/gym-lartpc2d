@@ -1,9 +1,9 @@
 import cv2
 from collections import OrderedDict
 import numpy as np
-from game import game_ai
+from lartpc_game.game import game_ai
 import matplotlib.pyplot as plt
-from agents.observables import Action2Dai, State2Dai, Observation2Dai
+from lartpc_game.agents.observables import Action2Dai, State2Dai, Observation2Dai
 
 class VisMap:
     def __init__(self, image, cmap_name='viridis'):
