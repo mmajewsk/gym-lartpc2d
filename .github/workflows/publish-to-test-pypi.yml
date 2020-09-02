@@ -13,7 +13,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.7
-    - name: Install pep517
+    - name: Install wheel and setuptools
       run: >-
         python -m
         pip install
@@ -24,8 +24,6 @@ jobs:
     - name: Build a binary wheel and a source tarball
       run: >-
         python3 setup.py sdist bdist_wheel
-    - name: show me refs
-      run: echo "Hello tag ${{ github.ref }}"
     - name: Publish distribution 📦 to Test PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
@@ -33,7 +31,7 @@ jobs:
         repository_url: https://test.pypi.org/legacy/
 
     - name: Publish distribution 📦 to PyPI
-      if: startsWith(github.ref, 'refs/tags')
+      if: always() && startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.pypi_password }}
