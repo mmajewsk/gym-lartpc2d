@@ -1,10 +1,9 @@
 import cv2
 from collections import OrderedDict
-from environment.observations import GameObservation2D
-from environment.actions import GameAction2D
 import numpy as np
-from game import game
+from game import game_ai
 import matplotlib.pyplot as plt
+from agents.observables import Action2Dai, State2Dai, Observation2Dai
 
 class VisMap:
     def __init__(self, image, cmap_name='viridis'):
@@ -28,7 +27,7 @@ class VisMap:
 
 
 class Visualisation:
-    def __init__(self, game: game.Game2D):
+    def __init__(self, game: game_ai.Lartpc2D):
         self.game = game
 
     @property
@@ -58,9 +57,9 @@ class Visualisation:
         self._heat_result_map = val[2]
 
     def _update_maps(self):
-        self._source_img = self.game.env.source_map.copy()
-        self._target_img = self.game.env.target_map.copy()
-        _result_img = self.game.env.result_map.copy()
+        self._source_img = self.game.detector.source_map.copy()
+        self._target_img = self.game.detector.target_map.copy()
+        _result_img = self.game.detector.result_map.copy()
         self._result_img = np.argmax(_result_img, axis=2)
         self._vis_source_map = VisMap(self._source_img)
         self._vis_target_map = VisMap(self._target_img)
@@ -111,7 +110,7 @@ class MixedModelVisualisation(Visualisation):
         poses['network_output'] = (1200, 250)
         return poses
 
-    def obs_action(self, obs: GameObservation2D, action: GameAction2D):
+    def obs_action(self, obs: Observation2Dai, action: Action2Dai):
         self.observation = obs
         self.action = action
 

@@ -1,20 +1,20 @@
 import data
-from environment.environment import BaseAgent
-from game.game import Environment2D,Game2D
-from environment.actions import Action2DFactory, QAction2D
-from environment.observations import Observation2DFactory, GameObservation2D
+from agents.base_agents import BaseAgent
+from game.game_ai import Detector2D,Lartpc2D
+from agents.observables import Observation2Dai, State2Dai, Action2Dai
 from game.dims import neighborhood2d
 import numpy as np
 import argparse
+from agents.tools import PolicyToAction
+
 
 class BotAgent(BaseAgent):
     def __init__(
             self,
-            action_factory: Action2DFactory,
-            observation_factory: Observation2DFactory
+            env: Lartpc2D,
         ):
-        BaseAgent.__init__(self, action_factory, observation_factory)
-        input_size = self.observation_factory.cursor.region_source_input.window_size
+        BaseAgent.__init__(self, env)
+        input_size = self.observation_settings.cursor.region_source_input.window_size
         assert input_size==5
         large_neighborhood = neighborhood2d(input_size)
         small_neighborhood = neighborhood2d(input_size-2)
@@ -34,7 +34,7 @@ class BotAgent(BaseAgent):
         self.lu_large_nbhood_mask = empty2.astype(np.bool)
 
 
-    def create_action(self, state: GameObservation2D) -> QAction2D:
+    def create_action(self, state: State2Dai) -> Action2Dai:
         """
          Ok so:
          1. check nearest neighbours, if have value, and untoched, move at random. If not possible:
@@ -43,8 +43,8 @@ class BotAgent(BaseAgent):
         :return:
         """
 
-        smbhd_source = state.source_observation[self.lu_small_nbhood_mask]
-        smbhd_result = state.result_observation[self.lu_small_nbhood_mask]
+        smbhd_source = state.source[self.lu_small_nbhood_mask]
+        smbhd_result = state.result[self.lu_small_nbhood_mask]
         assert smbhd_result.shape[-1] == 3
         smbhd_result = np.argmax(smbhd_result, axis=1)
         go = (smbhd_result == 0) & (smbhd_source != 0)
@@ -58,37 +58,33 @@ class BotAgent(BaseAgent):
         choice = np.random.choice(go_indeces,1)[0]
         result = np.zeros((1,8))
         result[0,choice] = 1.0
-        action = self.action_factory.create_random_action()
-        action.movement_decision = result
+        movement_random = np.random.random(self.action_settings.movement_size).astype(np.float32)
+        put_random = np.random.random(self.action_settings.put_shape).astype(np.float32)
+        action = PolicyToAction()((movement_random, put_random), self.action_settings)
+        action.type_check()
         return action
 
 def bot_replay(data_path, viz=True):
     max_step_number = 20
     data_generator = data.LartpcData.from_path(data_path)
     result_dimensions = 3
-    env = Environment2D(result_dimensions=result_dimensions)
-    env.set_map(*data_generator[3])
-    game = Game2D(env, max_step_number=max_step_number)
+    game = Lartpc2D(result_dimensions, max_step_number=max_step_number)
     if viz:
         # i know this is not nice, but sometimes opencv can be stack at debug
         from viz import Visualisation
         vis = Visualisation(game)
-    action_factory = Action2DFactory(game.cursor.copy(), categories=result_dimensions)
-    observation_factory = Observation2DFactory(game.cursor.copy(), categories=result_dimensions)
     agent = BotAgent(
-        action_factory,
-        observation_factory,
+        game
     )
     for iterate_maps in range(30):
         map_number = np.random.randint(0, len(data_generator))
-        game.env.set_map(*data_generator[map_number])
+        game.detector.set_maps(*data_generator[map_number])
         for iterate_tries in range(10):
             game.start()
             for model_run_iteration in range(game.max_step_number):
                 current_observation = game.get_observation()
-                model_action = agent.create_action(current_observation)
-                game_action = model_action.to_game_aciton(agent.action_factory)
-                state = game.step(game_action)
+                action = agent.create_action(current_observation)
+                state = game.step(action)
                 if viz: vis.update(0)
                 if state.done:
                     break

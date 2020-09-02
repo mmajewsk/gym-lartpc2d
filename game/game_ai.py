@@ -1,12 +1,12 @@
-from environment.actions import GameAction2D
-from environment.observations import GameObservation2D
-from environment.states import GameVisibleState2D
+from agents.settings import Action2DSettings, Observation2DSettings
+from agents.observables import Action2Dai, State2Dai, Observation2Dai, State2Dai
 from game.cursors import Cursor2D
 import numpy as np
 import pandas as pd
+
 from abc import abstractmethod, ABC
 
-class BaseEnvironment(ABC):
+class DetectorMaps(ABC):
     def __init__(self, result_dimensions = None):
         self.source_map = None
         self.target_map = None
@@ -33,7 +33,7 @@ class BaseEnvironment(ABC):
         row = self.nonzero_df.sample(1)
         return row[self.dimension_list].values
 
-    def set_map(self, source, target, result=None):
+    def set_maps(self, source, target, result=None):
         self.source_map = source
         self.target_map = target
         if result is not None:
@@ -51,23 +51,26 @@ class BaseEnvironment(ABC):
         return self.source_map, self.target_map, self.result_map
 
 
-class Environment2D(BaseEnvironment):
+class Detector2D(DetectorMaps):
 
     @property
     def dimension_list(self):
         return ['x','y']
 
 
-class Game2D:
+class Lartpc2D:
 
-    def __init__(self, env: Environment2D, max_step_number):
-        self.env = env
+    def __init__(self, result_dimension, max_step_number):
+        self.result_dimenstion = result_dimension
+        self.detector = Detector2D(result_dimension)
         self.cursor = Cursor2D(output_size=1, input_result_size = 5, input_source_size=5, movement_size=3)
         self.cursor_history = []
         self.reward_history = []
         self.max_step_number = max_step_number
         self.step_number = None
         self.done = None
+        self.action_settings = Action2DSettings(self.cursor.copy(), categories=self.detector.result_dimensions)
+        self.observation_settings = Observation2DSettings(self.cursor.copy(), categories=self.detector.result_dimensions)
 
 
     def move_cursor(self, new_center):
@@ -76,7 +79,7 @@ class Game2D:
 
     def start(self):
         self.cursor_history = []
-        for center in self.env.get_random_positions():
+        for center in self.detector.get_random_positions():
             if not self._outside_marigin(center):
                 self.cursor.current_center = center
                 break
@@ -85,13 +88,14 @@ class Game2D:
 
     def _outside_marigin(self, new_center):
         marigin = self.cursor.region_source_input.r_low
-        return np.any(new_center <= marigin) or np.any(new_center >= self.env.source_map.shape[0]-marigin)
+        return np.any(new_center <= marigin) or np.any(new_center >= self.detector.source_map.shape[0]-marigin)
 
 
-    def _act(self, action: GameAction2D) -> bool:
+    def _act(self, action: Action2Dai) -> bool:
         assert action.put_data.shape==self.cursor.region_output.shape+(3,)
-        self.cursor.set_range(self.env.result_map, action.put_data)
-        new_center = self.cursor.current_center + action.movement_vector
+        assert action.movement_vector.shape==(1,2)
+        self.cursor.set_range(self.detector.result_map, action.put_data)
+        new_center = self.cursor.current_center + np.squeeze(action.movement_vector)
         if self._outside_marigin(new_center):
             action_success = False
         else:
@@ -99,7 +103,7 @@ class Game2D:
             action_success = action.movement_vector.any()
         return action_success
 
-    def step(self, action: GameAction2D) -> GameVisibleState2D:
+    def step(self, action: Action2Dai) -> State2Dai:
         done = True
         can_move = self.step_number < self.max_step_number -1
         last_move = self.step_number == self.max_step_number -1
@@ -112,24 +116,21 @@ class Game2D:
             else:
                 done = True
         self.done = done
-        #if np.count_nonzero(self.get_observation().source_observation) == 0:
+        #if np.count_nonzero(self.get_observation().source) == 0:
         #    done = True
         state = self.get_state()
         self.reward_history.append(state.reward)
         return state
 
-    def get_observation(self) -> GameObservation2D:
-        source_curs = self.cursor.get_range(self.env.source_map, region_type='source_input')
-        result_curs = self.cursor.get_range(self.env.result_map, region_type='result_input')
-        obs = GameObservation2D(source_curs, result_curs)
+    def get_observation(self) -> Observation2Dai:
+        source_curs = self.cursor.get_range(self.detector.source_map, region_type='source_input').astype(np.float32)
+        result_curs = self.cursor.get_range(self.detector.result_map, region_type='result_input').astype(np.float32)
+        target_curs = self.cursor.get_range(self.detector.target_map, region_type='output').astype(np.int32)
+        obs = Observation2Dai(source_curs, result_curs, target_curs)
         return obs
 
-    def get_target(self) -> np.ndarray:
-        target_curs = self.cursor.get_range(self.env.target_map, region_type='output')
-        return target_curs
-
-    def get_state(self):
-        return GameVisibleState2D(self.get_observation(), self.get_target(), self.reward(), self.done, "")
+    def get_state(self) -> State2Dai:
+        return State2Dai(self.get_observation(), self.reward(), self.done, "")
 
     @staticmethod
     def _reward_calc(game, source_cursor, result_cursor):
@@ -153,10 +154,8 @@ class Game2D:
 
     def reward(self):
         rewards_dict = dict(
-            source_cursor=self.cursor.get_range(self.env.source_map),
-            result_cursor=self.cursor.get_range(self.env.result_map, region_type='result_input'),
+            source_cursor=self.cursor.get_range(self.detector.source_map),
+            result_cursor=self.cursor.get_range(self.detector.result_map, region_type='result_input'),
         )
-        reward = Game2D._reward_calc(self, **rewards_dict)
+        reward = Lartpc2D._reward_calc(self, **rewards_dict)
         return reward
-
-
