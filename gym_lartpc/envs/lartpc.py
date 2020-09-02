@@ -14,8 +14,8 @@ class LartpcEnv(gym.Env, Lartpc2D):
   def step(self, action: Action2Dai) -> State2Dai:
       return Lartpc2D.step(self, action)
 
-  def set_maps(src, trgt):
-      self.detector.set_maps(src, trg)
+  def set_maps(self, src, trgt):
+      self.detector.set_maps(src, trgt)
 
   def reset(self):
       src, trgt = self.detector.source_map, self.detector.target_map
