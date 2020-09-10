@@ -115,7 +115,7 @@ class MixedModelVisualisation(Visualisation):
         self.action = action
 
     def draw_network_io(self):
-        input = self._vis_source_map.cmap(self._vis_source_map.norm(self.observation.source_observation))
+        input = self._vis_source_map.cmap(self._vis_source_map.norm(self.observation.source))
         cv2.imshow('network_input', input)
         fig, ax = plt.subplots(figsize=(5,5))
         ax.bar([0,1,2],self.action.put_data[0][0])
