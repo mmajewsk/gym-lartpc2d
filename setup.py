@@ -14,12 +14,12 @@ with open("readme.md", "r") as fh:
         url="https://githum.com/mmajewsk/gym-lartpc2d",
         packages=find_packages(),
         install_requires=[
-                "pandas==1.0.0",
-                "scipy==1.4.1",
-                "opencv_python==4.2.0.32",
-                "numpy==1.18.1",
-                "matplotlib==3.1.3",
-                "nptyping==1.3.0",
+                "pandas>=1.0.0",
+                "scipy>=1.4.1",
+                "opencv_python>=4.2.0.32",
+                "numpy>=1.18.1",
+                "matplotlib>=3.1.3",
+                "nptyping>=1.3.0",
                 "gym"
         ]
 
