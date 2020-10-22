@@ -1,4 +1,4 @@
-# LARTPC Game
+# LARTPC Game (beta)
 
 ## What is this
 
