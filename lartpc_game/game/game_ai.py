@@ -11,6 +11,7 @@ class DetectorMaps(ABC):
         self.source_map = None
         self.target_map = None
         self.result_map = None
+        self.touched = None
         self.result_dimensions = result_dimensions
 
     @property
@@ -46,6 +47,7 @@ class DetectorMaps(ABC):
 
         self.read_source_nonzero_indeces()
         self.create_nonzero_df(self.nonzero_indeces)
+        self.touched = np.zeros(source.shape)
 
     def get_maps(self):
         return self.source_map, self.target_map, self.result_map
@@ -95,6 +97,7 @@ class Lartpc2D:
         assert action.put_data.shape==self.cursor.region_output.shape+(3,)
         assert action.movement_vector.shape==(1,2)
         self.cursor.set_range(self.detector.result_map, action.put_data)
+        self.detector.touched[self.cursor.current_center[0], self.cursor.current_center[1]] += 1
         new_center = self.cursor.current_center + np.squeeze(action.movement_vector)
         if self._outside_marigin(new_center):
             action_success = False

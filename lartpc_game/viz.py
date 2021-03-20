@@ -21,14 +21,39 @@ class VisMap:
             self.calculate_heatmap(self.img)
         return self.cmap(self.norm(self.img))
 
-    def reverse_heat(self, image):
-        return  self.cmap.reverse(self.norm.inverse(image))
+    def reverse_heat(self):
+        if self.cmap is None or self.norm  is None:
+            self.calculate_heatmap(self.img)
+        return  self.cmap.reverse(self.norm.inverse(self.img))
 
 
 
 class Visualisation:
-    def __init__(self, game: game_ai.Lartpc2D):
+    def __init__(
+            self,
+            game: game_ai.Lartpc2D,
+            source_cmap = None,
+            target_cmap = None,
+            result_cmap = None,
+            source_background_off = None,
+            target_background_off = None,
+            result_background_off = None,
+            source_inverse = False,
+            target_inverse = False,
+            result_inverse = False,
+    ):
         self.game = game
+        self.source_cmap = 'viridis' if source_cmap is None else source_cmap
+        self.target_cmap = 'viridis' if target_cmap is None else target_cmap
+        self.result_cmap = 'viridis' if result_cmap is None else result_cmap
+        self.source_background_off = source_background_off
+        self.target_background_off = target_background_off
+        self.result_background_off = result_background_off
+
+        self.source_inverse = source_inverse
+        self.target_inverse = target_inverse
+        self.result_inverse = result_inverse
+        self.maps_to_be_drawn = {}
 
     @property
     def heatmaps(self):
@@ -56,21 +81,44 @@ class Visualisation:
         self._heat_target_map = val[1]
         self._heat_result_map = val[2]
 
+
+    @property
+    def cursors_value(self):
+        cursors = []
+        for name, data in self.heatmaps.items():
+            cursor_data = self.game.cursor.get_range(data)
+            cursors.append((name, cursor_data))
+        return OrderedDict(cursors)
+
+
     def _update_maps(self):
         self._source_img = self.game.detector.source_map.copy()
         self._target_img = self.game.detector.target_map.copy()
         _result_img = self.game.detector.result_map.copy()
         self._result_img = np.argmax(_result_img, axis=2)
-        self._vis_source_map = VisMap(self._source_img)
-        self._vis_target_map = VisMap(self._target_img)
-        self._vis_result_map = VisMap(self._result_img)
-        self._heat_source_map = self._vis_source_map.heat_image()
-        self._heat_target_map = self._vis_target_map.heat_image()
-        self._heat_result_map = self._vis_result_map.heat_image()
+        if self.source_background_off is not None:
+            source_zero_indeces = (self._source_img == 0)
+        if self.target_background_off is not None:
+            target_zero_indeces = (self._target_img == 0)
+        if self.result_background_off is not None:
+            result_zero_indeces = (self._result_img == 0)
+        self._vis_source_map = VisMap(self._source_img, cmap_name=self.source_cmap)
+        self._vis_target_map = VisMap(self._target_img, cmap_name=self.target_cmap)
+        self._vis_result_map = VisMap(self._result_img, cmap_name=self.result_cmap)
+        self._heat_source_map = self._vis_source_map.heat_image() if self.source_inverse is False else self._vis_source_map.reverse_heat()
+        self._heat_target_map = self._vis_target_map.heat_image() if self.target_inverse is False else self._vis_target_map.reverse_heat()
+        self._heat_result_map = self._vis_result_map.heat_image() if self.result_inverse is False else self._vis_result_map.reverse_heat()
+        if self.source_background_off is not None:
+            self._heat_source_map[source_zero_indeces] = self.source_background_off
+        if self.target_background_off is not None:
+            self._heat_target_map[target_zero_indeces] = self.target_background_off
+        if self.result_background_off is not None:
+            self._heat_result_map[result_zero_indeces] = self.result_background_off
 
     def add_cursor_to_maps(self):
-        for _, hmap in self.heatmaps.items():
-            self.game.cursor.set_range(hmap, np.array([1,0,0, 1.]), region_type='source_input')
+        for map_name, hmap in self.heatmaps.items():
+            self.maps_to_be_drawn[map_name] = hmap.copy()
+            self.game.cursor.set_range(self.maps_to_be_drawn[map_name], np.array([1,0,0, 1.]), region_type='source_input')
 
     def show_cursor(self, name, data):
         cv2.imshow(name, data)
@@ -82,7 +130,7 @@ class Visualisation:
             cv2.imshow(name,cursor_data)
 
     def draw_heatmaps(self):
-        for name, map in self.heatmaps.items():
+        for name, map in self.maps_to_be_drawn.items():
             map = cv2.resize(map, (400,400))
             cv2.imshow(name, map)
 
@@ -99,7 +147,7 @@ class Visualisation:
     def update(self, wait=0):
         self.draw()
         self.move_windows()
-        cv2.waitKey(wait)
+        return cv2.waitKey(wait)
 
 class MixedModelVisualisation(Visualisation):
 
