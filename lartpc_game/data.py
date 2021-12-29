@@ -7,13 +7,28 @@ from collections import  OrderedDict
 class LartpcData:
 
     def __init__(self, source_list: list, target_list: list):
+        """
+        A useful class for reading the processed data in npz format.
+        It is important that both lists should be of the same size.
+        The source_list elements are X, and the target_list is Y.
+        Ordering of elements is important.
+        Args:
+            source_list: list of the source npz files
+            target_list: list of the target npz files
+        """
         self.source_list = source_list
         self.target_list = target_list
         self.index = 0
         self.length = len(source_list)
 
     @staticmethod
-    def from_path(data_filepath):
+    def from_path(data_filepath: str) -> LartpcData:
+        """
+        Reads the data from given path
+        Args:
+            data_filepath: a string to the folder containg npz files
+        """
+
         data_filepath = Path(data_filepath)
         source_files_list = [x for x in data_filepath.iterdir() if 'image' in x.name]
         source_files_range = [ int(x.name[len('image'):].split('.')[0]) for x in source_files_list]
@@ -43,6 +58,9 @@ class LartpcData:
         return LartpcData(self.source_list[min:max], self.target_list[min:max])
 
     def random(self):
+        """
+        Return random data point (X,Y pair)
+        """
         return self[np.random.randint(0, len(self))]
 
     def current(self):
