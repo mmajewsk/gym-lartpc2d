@@ -52,6 +52,8 @@ if __name__ == "__main__":
                         help="Path to destination folder to dump data to.")
     parser.add_argument("--entries", type=int, default=None,
                         help="Number of entries to process. Default, or none == all of the entries. The actual number of images will be (source and target) 2 * (number of projections) * 3 * entries. ")
+    parser.add_argument("--non-sparse", action='store_true', default=False,
+                        help="whether to save using np.save, instead of scipy.sparse.save_npz")
     args = parser.parse_args()
     ldg = LarcvDataGenerator(args.source_path)
     if args.entries is None:
@@ -63,11 +65,13 @@ if __name__ == "__main__":
     for i in tqdm.tqdm(range(number_of_entries)):
         for j in range(3):
             x, y = ldg.get_event(i, j)
-            # x_sparse = scipy.sparse.csr_matrix(x)
-            # y_sparse = scipy.sparse.csr_matrix(y)
+            if not args.non_sparse:
+                x= scipy.sparse.csr_matrix(x)
+                y= scipy.sparse.csr_matrix(y)
             images.append(x)
             labels.append(y)
 
+    saver = scipy.sparse.save_npz if not args.non_sparse else np.save
     for i, (im, l) in enumerate(zip(images, labels)):
-        np.save(args.destination + 'image{}.npy'.format(i), im)
-        np.save(args.destination + 'label{}.npy'.format(i), l)
+        saver(args.destination + 'image{}.npy'.format(i), im)
+        saver(args.destination + 'label{}.npy'.format(i), l)
