@@ -34,7 +34,7 @@ class Visualisation:
     def heatmaps(self):
         showmaps = [('source', self._heat_source_map),
         ('target', self._heat_target_map),
-        ('result', self._heat_result_map)]
+        ('canvas', self._heat_canvas_map)]
         return OrderedDict(showmaps)
 
     @property
@@ -45,7 +45,7 @@ class Visualisation:
             ('result', (900, 260)),
             ('source_cursor', (25, 100)),
             ('target_cursor', (450, 100)),
-            ('result_cursor', (900, 100))
+            ('canvas_cursor', (900, 100))
         ]
         return OrderedDict(win_poses)
 
@@ -54,19 +54,19 @@ class Visualisation:
         assert len(val) == 3, "setting too long"
         self._heat_source_map = val[0]
         self._heat_target_map = val[1]
-        self._heat_result_map = val[2]
+        self._heat_canvas_map = val[2]
 
     def _update_maps(self):
         self._source_img = self.game.detector.source_map.copy()
         self._target_img = self.game.detector.target_map.copy()
-        _result_img = self.game.detector.result_map.copy()
+        _canvas_img = self.game.detector.canvas_map.copy()
         self._result_img = np.argmax(_result_img, axis=2)
         self._vis_source_map = VisMap(self._source_img)
         self._vis_target_map = VisMap(self._target_img)
-        self._vis_result_map = VisMap(self._result_img)
+        self._vis_canvas_map = VisMap(self._canvas_img)
         self._heat_source_map = self._vis_source_map.heat_image()
         self._heat_target_map = self._vis_target_map.heat_image()
-        self._heat_result_map = self._vis_result_map.heat_image()
+        self._heat_canvas_map = self._vis_canvas_map.heat_image()
 
     def add_cursor_to_maps(self):
         for _, hmap in self.heatmaps.items():

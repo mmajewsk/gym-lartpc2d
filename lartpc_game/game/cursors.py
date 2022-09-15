@@ -4,26 +4,31 @@ import numpy as np
 
 class Cursor:
     def __init__(
-        self, output_size, input_result_size, input_source_size, movement_size=3
+        self,
+        output_target_size: int,
+        input_canvas_size: int,
+        input_source_size: int,
+        movement_size=3,
     ):
         """
-		:param output_size: output of the network size (the categorisation result, like one 1)
-		:param input_size:  input to the network size (usually 3x3x3)
+		:param output_target_size: the size of the window on the target output,
+            so for if output_target_size = 1 then the window is (1x1x3)
+		:param input_canvas_size:  input to the network from the canv
 		"""
         self.__center = None
-        self._output_size = output_size
-        self.input_result_size = input_result_size
+        self._output_target_size = output_target_size
+        self.input_canvas_size = input_canvas_size
         self.input_source_size = input_source_size
         self._movement_size = movement_size
-        self.region_output = self.__class__.region_cls(output_size)
-        self.region_result_input = self.__class__.region_cls(input_result_size)
+        self.region_target = self.__class__.region_cls(output_target_size)
+        self.region_canvas_input = self.__class__.region_cls(input_canvas_size)
         self.region_source_input = self.__class__.region_cls(input_source_size)
         self.region_movement = self.__class__.region_cls(movement_size)
         self.region_dict = {
             "source_input": self.region_source_input,
-            "result_input": self.region_result_input,
+            "canvas_input": self.region_canvas_input,
             "movement": self.region_movement,
-            "output": self.region_output,
+            "target": self.region_target,
         }
 
     @property
@@ -72,8 +77,8 @@ class Cursor:
 
     def copy(self):
         return type(self)(
-            output_size=self._output_size,
-            input_result_size=self.input_result_size,
+            output_target_size=self._output_target_size,
+            input_canvas_size=self.input_canvas_size,
             input_source_size=self.input_source_size,
             movement_size=self._movement_size,
         )

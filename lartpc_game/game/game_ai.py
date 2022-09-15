@@ -16,7 +16,7 @@ class DetectorMaps(ABC):
     def __init__(self, result_dimensions=None):
         self.source_map = None
         self.target_map = None
-        self.result_map = None
+        self.canvas_map = None
         self.result_dimensions = result_dimensions
 
     @property
@@ -43,20 +43,20 @@ class DetectorMaps(ABC):
         self.source_map = source
         self.target_map = target
         if result is not None:
-            self.result_map = result
+            self.canvas_map = canvas
         else:
             if self.result_dimensions is not None:
-                self.result_map = np.zeros(
+                self.canvas_map = np.zeros(
                     self.target_map.shape + (self.result_dimensions,)
                 )
             else:
-                self.result_map = np.zeros_like(self.target_map)
+                self.canvas_map = np.zeros_like(self.target_map)
 
         self.read_source_nonzero_indeces()
         self.create_nonzero_df(self.nonzero_indeces)
 
     def get_maps(self):
-        return self.source_map, self.target_map, self.result_map
+        return self.source_map, self.target_map, self.canvas_map
 
 
 class Detector2D(DetectorMaps):
@@ -66,11 +66,17 @@ class Detector2D(DetectorMaps):
 
 
 class Lartpc2D:
-    def __init__(self, result_dimension, max_step_number):
+    def __init__(self, result_dimension: int, max_step_number: int):
+        """
+        :param result_dimenstion: the number of dimensions in the result map. I.E. if the map is
+                                  256x256 and each pixel can be of three categories then this is
+                                  equal to 3
+        :param max_step_number: the maximum number of steps to be allowed in the environment
+        """
         self.result_dimenstion = result_dimension
         self.detector = Detector2D(result_dimension)
         self.cursor = Cursor2D(
-            output_size=1, input_result_size=5, input_source_size=5, movement_size=3
+            output_target_size=1, input_canvas_size=5, input_source_size=5, movement_size=3
         )
         self.cursor_history = []
         self.reward_history = []
@@ -104,9 +110,9 @@ class Lartpc2D:
         )
 
     def _act(self, action: Action2Dai) -> bool:
-        assert action.put_data.shape == self.cursor.region_output.shape + (3,)
+        assert action.put_data.shape == self.cursor.region_target.shape + (3,)
         assert action.movement_vector.shape == (1, 2)
-        self.cursor.set_range(self.detector.result_map, action.put_data)
+        self.cursor.set_range(self.detector.canvas_map, action.put_data)
         new_center = self.cursor.current_center + np.squeeze(action.movement_vector)
         if self._outside_marigin(new_center):
             action_success = False
@@ -138,30 +144,30 @@ class Lartpc2D:
         source_curs = self.cursor.get_range(
             self.detector.source_map, region_type="source_input"
         ).astype(np.float32)
-        result_curs = self.cursor.get_range(
-            self.detector.result_map, region_type="result_input"
+        canvas_curs = self.cursor.get_range(
+            self.detector.canvas_map, region_type="canvas_input"
         ).astype(np.float32)
         target_curs = self.cursor.get_range(
             self.detector.target_map, region_type="output"
         ).astype(np.int32)
-        obs = Observation2Dai(source_curs, result_curs, target_curs)
+        obs = Observation2Dai(source_curs, canvas_curs, target_curs)
         return obs
 
     def get_state(self) -> State2Dai:
         return State2Dai(self.get_observation(), self.reward(), self.done, "")
 
     @staticmethod
-    def _reward_calc(game, source_cursor, result_cursor):
+    def _reward_calc(game, source_cursor, canvas_cursor):
         nonzero_source_px = np.count_nonzero(source_cursor)
-        if len(result_cursor.shape) == 3:
-            result_categorised = np.argmax(result_cursor, axis=2)
+        if len(canvas_cursor.shape) == 3:
+            canvas_categorised = np.argmax(canvas_cursor, axis=2)
         else:
-            result_categorised = result_cursor
+            canvas_categorised = canvas_cursor
         center_pixel = source_cursor[
             game.cursor.region_source_input.r_low, game.cursor.region_source_input.r_low
         ]
         discovered_pixels = (
-            game.cursor.region_result_input.basic_block_size
+            game.cursor.region_canvas_input.basic_block_size
             - np.count_nonzero(result_categorised)
         )
         reward = nonzero_source_px + discovered_pixels * 0.09
@@ -178,8 +184,8 @@ class Lartpc2D:
     def reward(self):
         rewards_dict = dict(
             source_cursor=self.cursor.get_range(self.detector.source_map),
-            result_cursor=self.cursor.get_range(
-                self.detector.result_map, region_type="result_input"
+            canvas_cursor=self.cursor.get_range(
+                self.detector.canvas_map, region_type="canvas_input"
             ),
         )
         reward = Lartpc2D._reward_calc(self, **rewards_dict)
