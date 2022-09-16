@@ -1,8 +1,8 @@
+from __future__ import annotations
 import scipy.sparse
 import numpy as np
 from pathlib import Path
 from collections import  OrderedDict
-
 
 class LartpcData:
 
