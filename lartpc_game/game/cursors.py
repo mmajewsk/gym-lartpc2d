@@ -20,7 +20,7 @@ class Cursor:
         self.input_canvas_size = input_canvas_size
         self.input_source_size = input_source_size
         self._movement_size = movement_size
-        self.region_canvas_output = self.__class__.region_cls(output_canvas_size)
+        self.region_target_input = self.__class__.region_cls(output_canvas_size)
         self.region_canvas_input = self.__class__.region_cls(input_canvas_size)
         self.region_source_input = self.__class__.region_cls(input_source_size)
         self.region_movement = self.__class__.region_cls(movement_size)
@@ -28,7 +28,7 @@ class Cursor:
             "source_input": self.region_source_input,
             "canvas_input": self.region_canvas_input,
             "movement": self.region_movement,
-            "canvas_output": self.region_canvas_output,
+            "target_input": self.region_target_input,
         }
 
     @property
@@ -65,7 +65,7 @@ class Cursor:
         arr: np.ndarray,
         value: np.ndarray,
         center: np.ndarray = None,
-        region_type="canvas_output",
+        region_type="target_input",
     ):
         if center is None:
             center = self.current_center

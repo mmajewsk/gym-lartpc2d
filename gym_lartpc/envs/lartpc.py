@@ -7,6 +7,48 @@ from lartpc_game.data import LartpcData
 import os
 
 
+
+def _reward_calc(game, source_cursor, canvas_cursor, target_cursor):
+    nonzero_source_px = np.count_nonzero(source_cursor)
+    if len(canvas_cursor.shape) == 3:
+        canvas_categorised = np.argmax(canvas_cursor, axis=2)
+    else:
+        canvas_categorised = canvas_cursor
+    center_pixel = source_cursor[
+        game.cursor.region_source_input.r_low, game.cursor.region_source_input.r_low
+    ]
+    discovered_pixels = (
+        game.cursor.region_canvas_input.basic_block_size
+        - np.count_nonzero(canvas_categorised )
+    )
+    reward = nonzero_source_px + discovered_pixels * 0.09
+    assert reward >= 0
+    if discovered_pixels == 0:
+        reward = reward - 5
+    center_pixel_is_zero = np.count_nonzero(center_pixel) == 0
+    if center_pixel_is_zero:
+        reward = reward - 15
+        # if self.reward_history <= 0.0:
+        #    reward = reward - self.reward_history[-1]*3
+    return reward
+
+
+def _reward_calc2(game, source_cursor, canvas_cursor, target_cursor):
+    times_pixel_touched = game.cursor_history_counter[tuple(game.cursor.current_center)]
+    f = lambda x : (((x-1)**1.75)*0.25).real
+    revisit_punishment = f(times_pixel_touched)
+    cls_multiplier = [1.     , 3.98, 6.79]
+    prediction = canvas_cursor[1,1] # e.g [0.3, 0.8, 0.4]
+    prediction_class = prediction.argmax() # 2
+    target_class = target_cursor[0,0] # e.g 1
+    # breakpoint()
+    if prediction_class == target_class:
+        guess_reward = prediction[target_class]*cls_multiplier[target_class]
+    else:
+        guess_reward = -1*prediction[prediction_class]*cls_multiplier[prediction_class]
+    reward = guess_reward - revisit_punishment
+    return reward
+
 class LartpcEnv(gym.Env, Lartpc2D):
     metadata = {"render.modes": ["human"]}
 
@@ -29,6 +71,7 @@ class LartpcEnv(gym.Env, Lartpc2D):
                 "canvas": gym.spaces.Box(0, 1, canvas_size, dtype=np.float64),
             }
         )
+        self.reward_func = _reward_calc2
 
     def step(self, action: np.ndarray) -> State2Dai:
         mov_1hot, put_prob = action[:-3], action[-3:]

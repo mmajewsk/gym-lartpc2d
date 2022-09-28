@@ -9,11 +9,11 @@ class Action2DSettings:
         for range see  neighborhood2d
         """
         self.possible_movement = mov_range
-        self.possible_data = cursor.region_canvas_output.range
+        self.possible_data = cursor.region_target_input.range
         self.movement_size = cursor.region_movement.basic_block_size-1
-        self.data_size =  cursor.region_canvas_output.basic_block_size
+        self.data_size =  cursor.region_target_input.basic_block_size
         self.categories = categories
-        self.put_shape = self.cursor.region_canvas_output.shape
+        self.put_shape = self.cursor.region_target_input.shape
         if self.categories!=0:
             self.put_shape = self.put_shape+(self.categories, )
 

@@ -8,7 +8,7 @@ from lartpc_game.agents.observables import (
 from lartpc_game.game.cursors import Cursor2D
 import numpy as np
 import pandas as pd
-
+from collections import Counter
 from abc import abstractmethod, ABC
 
 
@@ -65,6 +65,30 @@ class Detector2D(DetectorMaps):
         return ["x", "y"]
 
 
+def _reward_calc(game, source_cursor, canvas_cursor, target_cursor):
+    nonzero_source_px = np.count_nonzero(source_cursor)
+    if len(canvas_cursor.shape) == 3:
+        canvas_categorised = np.argmax(canvas_cursor, axis=2)
+    else:
+        canvas_categorised = canvas_cursor
+    center_pixel = source_cursor[
+        game.cursor.region_source_input.r_low, game.cursor.region_source_input.r_low
+    ]
+    discovered_pixels = (
+        game.cursor.region_canvas_input.basic_block_size
+        - np.count_nonzero(canvas_categorised )
+    )
+    reward = nonzero_source_px + discovered_pixels * 0.09
+    assert reward >= 0
+    if discovered_pixels == 0:
+        reward = reward - 5
+    center_pixel_is_zero = np.count_nonzero(center_pixel) == 0
+    if center_pixel_is_zero:
+        reward = reward - 15
+        # if self.reward_history <= 0.0:
+        #    reward = reward - self.reward_history[-1]*3
+    return reward
+
 class Lartpc2D:
     def __init__(self, result_dimension: int, max_step_number: int):
         """
@@ -83,6 +107,8 @@ class Lartpc2D:
         self.max_step_number = max_step_number
         self.step_number = None
         self.done = None
+        self.cursor_history_counter = Counter()
+        self.reward_func = _reward_calc
         self.action_settings = Action2DSettings(
             self.cursor.copy(), categories=self.detector.result_dimensions
         )
@@ -91,7 +117,9 @@ class Lartpc2D:
         )
 
     def move_cursor(self, new_center):
-        self.cursor_history.append(self.cursor.current_center.copy())
+        centr = self.cursor.current_center.copy()
+        self.cursor_history.append(centr)
+        self.cursor_history_counter[tuple(centr)] += 1
         self.cursor.current_center = new_center
 
     def start(self):
@@ -110,7 +138,7 @@ class Lartpc2D:
         )
 
     def _act(self, action: Action2Dai) -> bool:
-        assert action.put_data.shape == self.cursor.region_canvas_output.shape + (3,)
+        assert action.put_data.shape == self.cursor.region_target_input.shape + (3,)
         assert action.movement_vector.shape == (1, 2)
         self.cursor.set_range(self.detector.canvas_map, action.put_data)
         new_center = self.cursor.current_center + np.squeeze(action.movement_vector)
@@ -148,7 +176,7 @@ class Lartpc2D:
             self.detector.canvas_map, region_type="canvas_input"
         ).astype(np.float32)
         target_curs = self.cursor.get_range(
-            self.detector.target_map, region_type="canvas_output"
+            self.detector.target_map, region_type="target_input"
         ).astype(np.int32)
         obs = Observation2Dai(source_curs, canvas_curs, target_curs)
         return obs
@@ -156,37 +184,15 @@ class Lartpc2D:
     def get_state(self) -> State2Dai:
         return State2Dai(self.get_observation(), self.reward(), self.done, {})
 
-    @staticmethod
-    def _reward_calc(game, source_cursor, canvas_cursor):
-        nonzero_source_px = np.count_nonzero(source_cursor)
-        if len(canvas_cursor.shape) == 3:
-            canvas_categorised = np.argmax(canvas_cursor, axis=2)
-        else:
-            canvas_categorised = canvas_cursor
-        center_pixel = source_cursor[
-            game.cursor.region_source_input.r_low, game.cursor.region_source_input.r_low
-        ]
-        discovered_pixels = (
-            game.cursor.region_canvas_input.basic_block_size
-            - np.count_nonzero(canvas_categorised )
-        )
-        reward = nonzero_source_px + discovered_pixels * 0.09
-        assert reward >= 0
-        if discovered_pixels == 0:
-            reward = reward - 5
-        center_pixel_is_zero = np.count_nonzero(center_pixel) == 0
-        if center_pixel_is_zero:
-            reward = reward - 15
-            # if self.reward_history <= 0.0:
-            #    reward = reward - self.reward_history[-1]*3
-        return reward
-
     def reward(self):
         rewards_dict = dict(
             source_cursor=self.cursor.get_range(self.detector.source_map),
             canvas_cursor=self.cursor.get_range(
                 self.detector.canvas_map, region_type="canvas_input"
             ),
+        target_cursor = self.cursor.get_range(
+            self.detector.target_map, region_type="target_input"
+        ).astype(np.int32)
         )
-        reward = Lartpc2D._reward_calc(self, **rewards_dict)
+        reward = self.reward_func(self, **rewards_dict)
         return reward
